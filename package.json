@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview"
+    "build": "yarn vite build",
+    "preview": "vite preview",
+    "deploy":"gh-pages -d build"
   },
   "devDependencies": {
     "typescript": "^5.0.2",
@@ -16,6 +17,7 @@
     "@babylonjs/core": "^6.17.0",
     "@babylonjs/gui": "^6.17.0",
     "@babylonjs/loaders": "^6.17.0",
-    "@babylonjs/materials": "^6.17.0"
+    "@babylonjs/materials": "^6.17.0",
+    "gh-pages": "^6.0.0"
   }
 }

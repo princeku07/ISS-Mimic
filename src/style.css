@@ -86,6 +86,7 @@ html,body {
 /* Styles for the progress bar */
 #progress-bar {
   height: 100%;
+  width: 0%;
  /* Set the initial width to 50% (can be changed dynamically) */
   background-color: #d8d8d8; /* Green color */
   transition: width 0.3s ease; /* Smooth transition for width changes */
