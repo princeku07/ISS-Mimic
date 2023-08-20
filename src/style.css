@@ -1,0 +1,97 @@
+@font-face {
+  font-family: myFont;
+  src: url(/nasalization.otf);
+}
+
+
+html,body {
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+  margin:0;
+  padding:0;
+}
+
+
+#renderCanvas {
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+
+/* style.css */
+#loading-screen {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  background-color: rgb(14, 14, 14);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  padding-bottom: 50px;
+}
+
+.loader {
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  border-top: 4px solid #ffffff;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.logo-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh; /* Set container height to viewport height */
+  padding: 5%; /* Use relative units for padding */
+  text-align: center; /* Center the logo horizontally */
+}
+
+.logo{
+  font-size: 8vw;
+  font-family: myFont;
+  color: rgb(221, 221, 221);
+  opacity: 0;
+  animation: fadeIn 2s forwards;
+ 
+}
+
+@keyframes fadeIn {
+
+  to {
+    opacity: 1;
+  }
+  
+}
+
+.progress-container {
+  width: 100%;
+  background-color: #6d6d6d5b;
+  margin-bottom: 50px;
+  height: 0.5vw;
+  border-radius: 10px;
+  overflow: hidden; /* Hide overflow for the progress bar */
+}
+
+/* Styles for the progress bar */
+#progress-bar {
+  height: 100%;
+ /* Set the initial width to 50% (can be changed dynamically) */
+  background-color: #d8d8d8; /* Green color */
+  transition: width 0.3s ease; /* Smooth transition for width changes */
+}
+
+
+
+
+
