@@ -1,4 +1,4 @@
-{
+{ "homepage": "https://xperiencelabs.github.io/ISS_mimic",
   "name": "issmimic",
   "private": true,
   "version": "0.0.0",
@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "yarn vite build",
     "preview": "vite preview",
+    "predeploy":"yarn vite build",
     "deploy":"gh-pages -d build"
   },
   "devDependencies": {
