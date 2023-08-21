@@ -53,7 +53,7 @@ class MainScene {
     }
 
     async customModel(fileLocation){
-        const {meshes} = await BABYLON.SceneLoader.ImportMeshAsync("","./",fileLocation,this.scene,function(evt){
+        const {meshes} = await BABYLON.SceneLoader.ImportMeshAsync("","https://cdn.jsdelivr.net/gh/XperienceLabs/ISS_mimic@9c0c74f5fea93493fce5d622bad999f75c120e8d/public/Iss.glb","",this.scene,function(evt){
             let loadingPercentage = 0
             if(evt.lengthComputable){
                
