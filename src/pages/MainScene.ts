@@ -159,7 +159,7 @@ class MainScene {
    }
 
    CreateAtmos(){
-    const atmos =  MeshBuilder.CreateSphere("clouds",{diameter:7.6, segments:30},this.scene);
+    const atmos =  MeshBuilder.CreateSphere("atmos",{diameter:7.6, segments:30},this.scene);
     const atmosMaterial = new BABYLON.StandardMaterial("atmos")
     atmosMaterial.specularColor = new BABYLON.Color3(0,0,0)
     atmosMaterial.diffuseColor =new BABYLON.Color3(0.1, 0.5, 1)
@@ -186,9 +186,7 @@ class MainScene {
    async IssModel() {
     try {
         const { meshes } = await BABYLON.SceneLoader.ImportMeshAsync(
-            "",
-            "./",
-            "Iss.glb",
+            "","https://cdn.jsdelivr.net/gh/XperienceLabs/ISS_mimic@ad28720f3cb90099a8bcd114e19de99c2c1b9b22/public/Iss.glb","",
             this.scene,
             function (evt) {
                 let loadingPercentage = 0;
@@ -196,7 +194,7 @@ class MainScene {
                     loadingPercentage = (evt.loaded / evt.total) * 100;
                 }
                 const progressBar = document.getElementById("progress-bar");
-                console.log(loadingPercentage);
+                // console.log(loadingPercentage);
                 progressBar.style.width = `${loadingPercentage}%`;
             }
         );
