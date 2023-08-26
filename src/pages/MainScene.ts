@@ -15,8 +15,10 @@ class MainScene {
     selectedComponent:BABYLON.AbstractMesh = null
     originalMaterial = null; 
     earthMaterial:BABYLON.StandardMaterial
+    earth:BABYLON.Mesh
     earthPosition:BABYLON.Vector3
     sun:BABYLON.PointLight
+    light:BABYLON.HemisphericLight
     
 
     
@@ -47,8 +49,8 @@ class MainScene {
         this.material.specularColor = new BABYLON.Color3(0,0,0)
         this.earthPosition =  new BABYLON.Vector3(0, -4.8, -2.4);
         // new BABYLON.AxesViewer(this.scene,3)
-        const light =  new BABYLON.HemisphericLight("light")
-        light.intensity=0.2
+        this.light =  new BABYLON.HemisphericLight("light")
+        this.light.intensity=0.2
         this.CreateSkyBox()
         this.createCamera() 
         this.CreateSun()
@@ -69,7 +71,7 @@ class MainScene {
         
         this.camera.minZ = 0.02
         this.camera.lowerRadiusLimit = 0.4
-        this.camera.upperRadiusLimit = 5
+        this.camera.upperRadiusLimit = 8
         this.camera.panningSensibility = 0
         this.camera.position = new BABYLON.Vector3(0.01,0.15,1.083)
         this.camera.attachControl(canvas,true)
@@ -81,8 +83,8 @@ class MainScene {
     }
 
     CreateSun(){
-        const sun = new BABYLON.PointLight("sun",new BABYLON.Vector3(10,20,20),this.scene)
-        sun.intensity=0
+        const sun = new BABYLON.PointLight("sun",new BABYLON.Vector3(10,10,20),this.scene)
+        sun.intensity=0.5
         sun.specular = new BABYLON.Color3(0.1,0.1,0.1)
         this.sun = sun
         this.CreateLensFlare()
@@ -131,14 +133,16 @@ class MainScene {
        const earthMaterial = new BABYLON.StandardMaterial("earth",this.scene)
 
        earthMaterial.diffuseTexture = new BABYLON.Texture("./earth/earth_daymap.jpg")
-    //    earthMaterial.bumpTexture = new BABYLON.Texture("./earth/normal_map.png")
+       earthMaterial.bumpTexture = new BABYLON.Texture("./earth/normalmap.jpg")
+    //    earthMaterial.invertNormalMapX = true
+    //    earthMaterial.invertNormalMapY= true
        earthMaterial.specularTexture = new BABYLON.Texture("./earth/earth_specular_map.png")
        earth.material = earthMaterial
        this.earthMaterial = earthMaterial
        // Position Earth
        earth.position = this.earthPosition
        earth.checkCollisions = true
-      
+       this.light.excludedMeshes.push(earth)
       
 
        
@@ -155,19 +159,31 @@ class MainScene {
      cloud.material = cloudMaterial
      cloud.position = this.earthPosition
      cloud.rotation.z = Math.PI/2
-     
+     this.light.excludedMeshes.push(cloud)
    }
 
    CreateAtmos(){
-    const atmos =  MeshBuilder.CreateSphere("atmos",{diameter:7.6, segments:30},this.scene);
+    const atmos =  MeshBuilder.CreateSphere("atmos",{diameter:7.8, segments:30},this.scene);
     const atmosMaterial = new BABYLON.StandardMaterial("atmos")
     atmosMaterial.specularColor = new BABYLON.Color3(0,0,0)
-    atmosMaterial.diffuseColor =new BABYLON.Color3(0.1, 0.5, 1)
+    atmosMaterial.emissiveColor =  BABYLON.Color3.FromHexString("#1eadff")
+    
+    // atmosMaterial.diffuseColor =new BABYLON.Color3(0.1, 0.5, 1)
     atmosMaterial.alpha = 0.2
+    atmosMaterial.emissiveFresnelParameters = new BABYLON.FresnelParameters();
+    atmosMaterial.emissiveFresnelParameters.bias = 0.7;
+    atmosMaterial.emissiveFresnelParameters.power = 4;
+    atmosMaterial.emissiveFresnelParameters.leftColor = BABYLON.Color3.FromHexString("#29bbff")
+    atmosMaterial.emissiveFresnelParameters.rightColor = BABYLON.Color3.Black();
 
+    atmosMaterial.opacityFresnelParameters = new BABYLON.FresnelParameters();
+    atmosMaterial.opacityFresnelParameters.leftColor = BABYLON.Color3.FromHexString("#ffe600");
+    atmosMaterial.opacityFresnelParameters.rightColor = BABYLON.Color3.Black();
     atmos.material = atmosMaterial
     // atmos.material = shaderMaterial
     atmos.position = this.earthPosition
+    atmos.checkCollisions =true
+    this.light.excludedMeshes.push(atmos)
    }
 
    nightLights(){
@@ -296,7 +312,7 @@ handleMeshInteraction(mesh:BABYLON.AbstractMesh,event:string){
         case 'click':
             this.handleMeshClick(mesh)
             this.moveCameraToMesh(mesh)
-            
+            this.highlightLayer.removeMesh(mesh)
             break
         
         case 'hoverIn':
