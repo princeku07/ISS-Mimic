@@ -1,6 +1,32 @@
 import * as BABYLON from "@babylonjs/core"
-import { MeshBuilder,Scene } from "@babylonjs/core"
+import { 
+    AbstractMesh,
+    ActionManager,
+    ArcRotateCamera,
+    Color3,
+    CubeTexture,
+    EasingFunction,
+    Engine,
+    ExecuteCodeAction,
+    FresnelParameters,
+    GlowLayer,
+    HemisphericLight,
+    HighlightLayer,
+    LensFlare,
+    LensFlareSystem,
+    Mesh,
+    MeshBuilder,
+    PointLight,
+    Scene, 
+    SceneLoader, 
+    SineEase, 
+    StandardMaterial,
+    Texture,
+    Vector3,
+    
+} from "@babylonjs/core"
 import "@babylonjs/loaders"
+import OrbitAnimation from "../components/OrbitAnimation"
 
 
 
@@ -8,17 +34,21 @@ const loadingScreen = document.getElementById("loading-screen")
 
 class MainScene {
     scene:Scene
-    camera:BABYLON.ArcRotateCamera
-    components:BABYLON.AbstractMesh[]
-    highlightLayer:BABYLON.HighlightLayer
-    material:BABYLON.StandardMaterial
-    selectedComponent:BABYLON.AbstractMesh = null
+    camera:ArcRotateCamera
+    components:AbstractMesh[]
+    highlightLayer:HighlightLayer
+    material:StandardMaterial
+    selectedComponent:AbstractMesh = null
     originalMaterial = null; 
-    earthMaterial:BABYLON.StandardMaterial
-    earth:BABYLON.Mesh
-    earthPosition:BABYLON.Vector3
-    sun:BABYLON.PointLight
-    light:BABYLON.HemisphericLight
+    earthMaterial:StandardMaterial
+    earth:Mesh
+    earthPosition:Vector3
+    sun:PointLight
+    light:HemisphericLight
+    orbitAnimation:OrbitAnimation
+
+    sphere:Mesh
+    lastTime:number = 0
     
 
     
@@ -31,26 +61,31 @@ class MainScene {
             loadingScreen.style.display = 'none'
             setTimeout(()=> {
                 this.changeRotation()
+                
             },5000)
         })
-        
     }
 
     
 
     onSceneReady(){
-        this.scene.clearColor = new BABYLON.Color3(0,0,0)
-        this.highlightLayer = new BABYLON.HighlightLayer("highlightMesh",this.scene)
+        this.scene.clearColor = new Color3(0,0,0)
+        this.highlightLayer = new  HighlightLayer("highlightMesh",this.scene)
         this.highlightLayer.innerGlow = false
         this.highlightLayer.outerGlow = true
 
-        this.material = new BABYLON.StandardMaterial("clickedMesh")
-        this.material.emissiveColor = new BABYLON.Color3(0,1,0.53)
-        this.material.specularColor = new BABYLON.Color3(0,0,0)
-        this.earthPosition =  new BABYLON.Vector3(0, -4.8, -2.4);
-        // new BABYLON.AxesViewer(this.scene,3)
-        this.light =  new BABYLON.HemisphericLight("light")
-        this.light.intensity=0.2
+
+        //sphere
+        // this.sphere = MeshBuilder.CreateSphere("sphere",{diameter:1,segments:8},this.scene)
+        
+       
+        this.material = new StandardMaterial("clickedMesh")
+        this.material.emissiveColor = new Color3(0,1,0.53)
+        this.material.specularColor = new Color3(0,0,0)
+        this.earthPosition =  new Vector3(0, -4.8, -2.4);
+     
+        this.light =  new HemisphericLight("light")
+        this.light.intensity=1
         this.CreateSkyBox()
         this.createCamera() 
         this.CreateSun()
@@ -60,12 +95,13 @@ class MainScene {
         this.CreateAtmos()
         this.IssModel()
         
+
         
     }
 
     createCamera(){
         const canvas = this.scene.getEngine().getRenderingCanvas()
-        this.camera =  new BABYLON.ArcRotateCamera("camera",-Math.PI/2,Math.PI/2,2.5,BABYLON.Vector3.Zero(), this.scene);
+        this.camera =  new ArcRotateCamera("camera",-Math.PI/2,Math.PI/2,2.5,Vector3.Zero(), this.scene);
         this.camera.speed = 0.02 
         this.camera.wheelPrecision = 100
         
@@ -73,7 +109,7 @@ class MainScene {
         this.camera.lowerRadiusLimit = 0.4
         this.camera.upperRadiusLimit = 8
         this.camera.panningSensibility = 0
-        this.camera.position = new BABYLON.Vector3(0.01,0.15,1.083)
+        this.camera.position = new Vector3(0.01,0.15,1.083)
         this.camera.attachControl(canvas,true)
         // this.camera.onAfterCheckInputsObservable.add(()=>{
         //     console.log("camera position",this.camera.position.toString())
@@ -82,30 +118,32 @@ class MainScene {
         
     }
 
+    
+
     CreateSun(){
-        const sun = new BABYLON.PointLight("sun",new BABYLON.Vector3(10,10,20),this.scene)
-        sun.intensity=0.5
-        sun.specular = new BABYLON.Color3(0.1,0.1,0.1)
+        const sun = new PointLight("sun",new Vector3(10,2,20),this.scene)
+        sun.intensity=1
+        sun.specular = new Color3(0.1,0.1,0.1)
         this.sun = sun
         this.CreateLensFlare()
     }
 
     CreateLensFlare(){
-        const lensFlareSystem = new BABYLON.LensFlareSystem("lensflareSystem",this.sun,this.scene);
-        var flare00 = new BABYLON.LensFlare(0.1, 0, new BABYLON.Color3(1, 1, 1), "./flare/flare3.png", lensFlareSystem);
-        var flare01 = new BABYLON.LensFlare(0.4, 0.1, new BABYLON.Color3(1, 1, 1), "./flare/flare.png", lensFlareSystem);
-        var flare02 = new BABYLON.LensFlare(0.2, 0.2, new BABYLON.Color3(1, 1, 1), "./flare/flare.png", lensFlareSystem);
-        var flare02 = new BABYLON.LensFlare(0.1, 0.3, new BABYLON.Color3(1, 1, 1), "./flare/flare3.png", lensFlareSystem);
-        var flare03 = new BABYLON.LensFlare(0.3, 0.4, new BABYLON.Color3(0.5, 0.5, 1), "./flare/flare.png", lensFlareSystem);
-        var flare05 = new BABYLON.LensFlare(0.8, 1.0, new BABYLON.Color3(1, 1, 1), "./flare/Flare2.png", lensFlareSystem);
-        var flare05 = new BABYLON.LensFlare(0.8, 1.0, new BABYLON.Color3(1, 1, 1), "./flare/flare.png", lensFlareSystem);
+        const lensFlareSystem = new LensFlareSystem("lensflareSystem",this.sun,this.scene);
+        var flare00 = new LensFlare(0.1, 0, new Color3(1, 1, 1), "./flare/flare3.png", lensFlareSystem);
+        var flare01 = new LensFlare(0.4, 0.1, new Color3(1, 1, 1), "./flare/flare.png", lensFlareSystem);
+        var flare02 = new LensFlare(0.2, 0.2, new Color3(1, 1, 1), "./flare/flare.png", lensFlareSystem);
+        var flare02 = new LensFlare(0.1, 0.3, new Color3(1, 1, 1), "./flare/flare3.png", lensFlareSystem);
+        var flare03 = new LensFlare(0.3, 0.4, new Color3(0.5, 0.5, 1), "./flare/flare.png", lensFlareSystem);
+        var flare05 = new LensFlare(0.8, 1.0, new Color3(1, 1, 1), "./flare/Flare2.png", lensFlareSystem);
+        var flare05 = new LensFlare(0.8, 1.0, new Color3(1, 1, 1), "./flare/flare.png", lensFlareSystem);
     }
 
    // Space sky box
    
    CreateSkyBox(){
-    const skyBox = BABYLON.Mesh.CreateBox("skyBox",10000.0,this.scene);
-    const skyBoxMaterial = new BABYLON.StandardMaterial("skyBox",this.scene)
+    const skyBox = Mesh.CreateBox("skyBox",10000.0,this.scene);
+    const skyBoxMaterial = new StandardMaterial("skyBox",this.scene)
     skyBoxMaterial.backFaceCulling = false
     const files = [
         './space/space.jpg', //left
@@ -115,10 +153,10 @@ class MainScene {
         './space/space.jpg', //down
         './space/space.jpg'  //back
     ];
-    skyBoxMaterial.reflectionTexture = BABYLON.CubeTexture.CreateFromImages(files,this.scene);
-    skyBoxMaterial.reflectionTexture.coordinatesMode = BABYLON.Texture.SKYBOX_MODE
-    skyBoxMaterial.diffuseColor = new BABYLON.Color3(0,0,0)
-    skyBoxMaterial.specularColor = new BABYLON.Color3(0,0,0)
+    skyBoxMaterial.reflectionTexture = CubeTexture.CreateFromImages(files,this.scene);
+    skyBoxMaterial.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE
+    skyBoxMaterial.diffuseColor = new Color3(0,0,0)
+    skyBoxMaterial.specularColor = new Color3(0,0,0)
     skyBoxMaterial.disableLighting = false
     skyBox.material = skyBoxMaterial
    }
@@ -126,23 +164,21 @@ class MainScene {
 
    //Create Earth
    CreateEarth(){
-       const earth = BABYLON.MeshBuilder.CreateSphere("earth",{ diameter: 7.5, segments: 12 },this.scene);
+       const earth = MeshBuilder.CreateSphere("earth",{ diameter: 7.5, segments: 12 },this.scene);
        earth.isBlocker = true
        earth.rotation.z = Math.PI
-       earth.rotation.x = -Math.PI/3
-       const earthMaterial = new BABYLON.StandardMaterial("earth",this.scene)
+       const earthMaterial = new StandardMaterial("earth",this.scene)
 
-       earthMaterial.diffuseTexture = new BABYLON.Texture("./earth/earth_daymap.jpg")
-       earthMaterial.bumpTexture = new BABYLON.Texture("./earth/normalmap.jpg")
-    //    earthMaterial.invertNormalMapX = true
-    //    earthMaterial.invertNormalMapY= true
-       earthMaterial.specularTexture = new BABYLON.Texture("./earth/earth_specular_map.png")
+       earthMaterial.diffuseTexture = new Texture("./earth/earth_daymap.jpg")
+       earthMaterial.bumpTexture = new Texture("./earth/normalmap.jpg")
+       earthMaterial.specularTexture = new Texture("./earth/earth_specular_map.png")
        earth.material = earthMaterial
        this.earthMaterial = earthMaterial
        // Position Earth
        earth.position = this.earthPosition
        earth.checkCollisions = true
        this.light.excludedMeshes.push(earth)
+       this.earth = earth
       
 
        
@@ -151,34 +187,35 @@ class MainScene {
    CreateClouds(){
      //clouds
      const cloud =  MeshBuilder.CreateSphere("clouds",{diameter:7.7, segments:12},this.scene);
-     const cloudMaterial = new BABYLON.StandardMaterial("clouds")
-     cloudMaterial.diffuseTexture = new BABYLON.Texture("./earth/newCloud.png")
+     const cloudMaterial = new StandardMaterial("clouds")
+     cloudMaterial.diffuseTexture = new Texture("./earth/newCloud.png")
      cloudMaterial.diffuseTexture.hasAlpha = true
-     cloudMaterial.alphaMode = BABYLON.Engine.ALPHA_MULTIPLY
-     cloudMaterial.specularColor = new BABYLON.Color3(0,0,0)
+     cloudMaterial.alphaMode = Engine.ALPHA_MULTIPLY
+     cloudMaterial.specularColor = new Color3(0,0,0)
      cloud.material = cloudMaterial
      cloud.position = this.earthPosition
      cloud.rotation.z = Math.PI/2
+     this.cloud = cloud
      this.light.excludedMeshes.push(cloud)
    }
 
    CreateAtmos(){
     const atmos =  MeshBuilder.CreateSphere("atmos",{diameter:7.8, segments:30},this.scene);
-    const atmosMaterial = new BABYLON.StandardMaterial("atmos")
-    atmosMaterial.specularColor = new BABYLON.Color3(0,0,0)
-    atmosMaterial.emissiveColor =  BABYLON.Color3.FromHexString("#1eadff")
+    const atmosMaterial = new StandardMaterial("atmos")
+    atmosMaterial.specularColor = new Color3(0,0,0)
+    atmosMaterial.emissiveColor =  Color3.FromHexString("#1eadff")
     
     // atmosMaterial.diffuseColor =new BABYLON.Color3(0.1, 0.5, 1)
-    atmosMaterial.alpha = 0.2
-    atmosMaterial.emissiveFresnelParameters = new BABYLON.FresnelParameters();
+    atmosMaterial.alpha = 0
+    atmosMaterial.emissiveFresnelParameters = new FresnelParameters();
     atmosMaterial.emissiveFresnelParameters.bias = 0.7;
     atmosMaterial.emissiveFresnelParameters.power = 4;
-    atmosMaterial.emissiveFresnelParameters.leftColor = BABYLON.Color3.FromHexString("#29bbff")
-    atmosMaterial.emissiveFresnelParameters.rightColor = BABYLON.Color3.Black();
+    atmosMaterial.emissiveFresnelParameters.leftColor = Color3.FromHexString("#29bbff")
+    atmosMaterial.emissiveFresnelParameters.rightColor = Color3.Black();
 
-    atmosMaterial.opacityFresnelParameters = new BABYLON.FresnelParameters();
-    atmosMaterial.opacityFresnelParameters.leftColor = BABYLON.Color3.FromHexString("#ffe600");
-    atmosMaterial.opacityFresnelParameters.rightColor = BABYLON.Color3.Black();
+    atmosMaterial.opacityFresnelParameters = new FresnelParameters();
+    atmosMaterial.opacityFresnelParameters.leftColor = Color3.FromHexString("#ffe600");
+    atmosMaterial.opacityFresnelParameters.rightColor = Color3.Black();
     atmos.material = atmosMaterial
     // atmos.material = shaderMaterial
     atmos.position = this.earthPosition
@@ -187,8 +224,8 @@ class MainScene {
    }
 
    nightLights(){
-    this.earthMaterial.emissiveTexture = new BABYLON.Texture("./earth/earth_nightlights.png")
-    const glowLayer = new BABYLON.GlowLayer("glow",this.scene);
+    this.earthMaterial.emissiveTexture = new Texture("./earth/earth_nightlights.png")
+    const glowLayer = new GlowLayer("glow",this.scene);
     glowLayer.customEmissiveColorSelector = function (mesh,subMesh,material,result){
      if(mesh.name == "earth"){
          result.set(1,0.85,0.21,1)
@@ -201,7 +238,7 @@ class MainScene {
 
    async IssModel() {
     try {
-        const { meshes } = await BABYLON.SceneLoader.ImportMeshAsync(
+        const { meshes } = await SceneLoader.ImportMeshAsync(
             "","https://cdn.jsdelivr.net/gh/XperienceLabs/ISS_mimic@ad28720f3cb90099a8bcd114e19de99c2c1b9b22/public/Iss.glb","",
             this.scene,
             function (evt) {
@@ -214,10 +251,20 @@ class MainScene {
                 progressBar.style.width = `${loadingPercentage}%`;
             }
         );
+        // const plane = MeshBuilder.CreatePlane("helper",{size:0.5})
+        // const planeMat = new BABYLON.StandardMaterial("mat")
+        // plane.rotation.x = -Math.PI/6
+        // meshes[0].setParent(plane)
+        // planeMat.backFaceCulling = false
+        // plane.material = planeMat
         for(const mesh of meshes){
             mesh.isBlocker = true
+            
         }
-
+        // this.orbitAnimation = new OrbitAnimation(this.earth,5.3,0.2)
+        // this.orbitAnimation.createOrbitPathLines(this.scene)
+        // this.orbitAnimation.animateMesh(plane,this.scene,5)
+        
         // Initialize solar panels using names to map the meshes
         this.components = [
             "MainPanel1", "MainPanel2", "MainPanel3", "MainPanel4",
@@ -232,6 +279,12 @@ class MainScene {
             this.addInteractionListeners(mesh)
         }
         this.sceneEvent()
+        // const followCamera = new BABYLON.FollowCamera("followCamera",new BABYLON.Vector3(0,0,0),this.scene)
+        // followCamera.lockedTarget = meshes[0]
+        // followCamera.heightOffset = 2
+        // followCamera.radius = 0.2
+        // followCamera.cameraAcceleration = 0.05
+        // this.scene.activeCamera = followCamera
     } catch (error) {
         console.error("An error occurred during ISS model loading:", error);
         // Handle the error, such as displaying a message to the user or retrying
@@ -247,7 +300,7 @@ changeRotation(){
     
 }
 
-getComponent(name:string,meshes:BABYLON.AbstractMesh[]){
+getComponent(name:string,meshes:AbstractMesh[]){
 
     
     //create hash map to store meshes by name
@@ -276,12 +329,12 @@ getComponent(name:string,meshes:BABYLON.AbstractMesh[]){
     return parentMesh
 }
 
-addInteractionListeners(mesh:BABYLON.AbstractMesh){
+addInteractionListeners(mesh:AbstractMesh){
     mesh.isPickable = true
-    mesh.actionManager = new BABYLON.ActionManager(this.scene)
+    mesh.actionManager = new ActionManager(this.scene)
     mesh.actionManager.registerAction(
-        new BABYLON.ExecuteCodeAction(
-            BABYLON.ActionManager.OnPickTrigger,
+        new ExecuteCodeAction(
+            ActionManager.OnPickTrigger,
             () => {
                 this.handleMeshInteraction(mesh,"click")
             }
@@ -289,8 +342,8 @@ addInteractionListeners(mesh:BABYLON.AbstractMesh){
     );
 
     mesh.actionManager.registerAction(
-        new BABYLON.ExecuteCodeAction(
-            BABYLON.ActionManager.OnPointerOverTrigger,
+        new ExecuteCodeAction(
+            ActionManager.OnPointerOverTrigger,
             ()=> {
                 this.handleMeshInteraction(mesh,'hoverIn')
             } 
@@ -298,8 +351,8 @@ addInteractionListeners(mesh:BABYLON.AbstractMesh){
     )
 
     mesh.actionManager.registerAction(
-        new BABYLON.ExecuteCodeAction(
-            BABYLON.ActionManager.OnPointerOutTrigger,
+        new ExecuteCodeAction(
+            ActionManager.OnPointerOutTrigger,
             () => {
                 this.handleMeshInteraction(mesh,"hoverOut")
             }
@@ -307,7 +360,7 @@ addInteractionListeners(mesh:BABYLON.AbstractMesh){
     )
 }
 
-handleMeshInteraction(mesh:BABYLON.AbstractMesh,event:string){
+handleMeshInteraction(mesh:AbstractMesh,event:string){
     switch (event){
         case 'click':
             this.handleMeshClick(mesh)
@@ -316,7 +369,7 @@ handleMeshInteraction(mesh:BABYLON.AbstractMesh,event:string){
             break
         
         case 'hoverIn':
-            this.highlightLayer.addMesh(mesh,new BABYLON.Color3(0,0.43,1))
+            this.highlightLayer.addMesh(mesh,new Color3(0,0.43,1))
             break
         
         case 'hoverOut':
@@ -325,7 +378,7 @@ handleMeshInteraction(mesh:BABYLON.AbstractMesh,event:string){
     }
 }
 
-handleMeshClick(mesh:BABYLON.AbstractMesh){
+handleMeshClick(mesh:AbstractMesh){
 
     //Check if we have any component is selected 
     if(this.selectedComponent){
@@ -367,8 +420,8 @@ moveCameraToMesh(mesh) {
     const cameraPosition = targetPosition.subtract(normal.scale(3)); // Adjust the scale factor as needed
 
     // Create an easing function for smoother animation
-    const ease = new BABYLON.SineEase();
-    ease.setEasingMode(BABYLON.EasingFunction.EASINGMODE_EASEINOUT);
+    const ease = new SineEase();
+    ease.setEasingMode(EasingFunction.EASINGMODE_EASEINOUT);
 
     // Create a position animation with easing
     const positionAnimation = new BABYLON.Animation(
@@ -398,10 +451,19 @@ moveCameraToMesh(mesh) {
     }
    }
 
+   startOrbitAnimation(){
+    this.scene.registerBeforeRender(() => {
+        const currentTime = this.scene.getEngine().getDeltaTime()/10 + this.lastTime
+        this.orbitAnimation.updatePosition(currentTime)
+        this.lastTime = currentTime
+    })
+   }
+
     
 
     onRender(){
-
+       this.earth.rotation.y -= 0.005
+       this.cloud.rotation.y -=0.002
     }
 }
 

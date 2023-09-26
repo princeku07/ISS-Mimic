@@ -5,9 +5,11 @@ const canvas = document.getElementById("renderCanvas")
 const engine = new Engine(canvas)
 const scene = new Scene(engine)
 
-new MainScene(scene)
+  const mainScene = new MainScene(scene)
 engine.runRenderLoop(() =>{
+  mainScene.onRender()
   scene.render()
+
 })
 
 window.addEventListener("resize", () => {
